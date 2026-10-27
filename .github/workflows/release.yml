@@ -33,19 +33,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
         run: cmake --build build --parallel
+
+      - name: Run on own sources
+        run: |
+          ./build/clang-tidy-cache -p build $(find src -name '*.cpp')
+
       - name: Package
         run: |
           name=clang-tidy-cache-${{ runner.os }}-${{ runner.arch }}
           tar -C build -czf "$name.tar.gz" clang-tidy-cache
           echo "ASSET=$name.tar.gz" >> "$GITHUB_ENV"
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ASSET }}
           path: ${{ env.ASSET }}
+
       - name: Upload release asset
         if: needs.release-please.outputs.release_created == 'true'
         env:

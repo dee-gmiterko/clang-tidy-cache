@@ -1,8 +1,11 @@
 #include "clang_tidy/clang_tidy.h"
 
+#include <unistd.h>
+
 #include <array>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 
 #include "helpers/fingerprint.h"
 #include "helpers/process/process.h"
@@ -10,6 +13,7 @@
 namespace {
 
 constexpr const char* kExecutableName = "clang-tidy";
+constexpr const char* kExecutableEnvironment = "CLANG_TIDY";
 constexpr std::array<const char*, 5> kIncludeEnvironment{"CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH",
                                                          "OBJC_INCLUDE_PATH", "SDKROOT"};
 constexpr std::array<const char*, 2> kConfigNames{".clang-tidy", "_clang-tidy"};
@@ -17,8 +21,17 @@ constexpr std::array<const char*, 2> kConfigNames{".clang-tidy", "_clang-tidy"};
 }  // namespace
 
 std::optional<ClangTidy> ClangTidy::locate() {
-  fs::path executable = findExecutable(kExecutableName);
-  if (executable.empty()) {
+  fs::path executable;
+  const char* override = std::getenv(kExecutableEnvironment);
+  if (override != nullptr && *override != '\0') {
+    executable = std::string_view(override).find('/') != std::string_view::npos ? fs::path(override)
+                                                                                  : findExecutable(override);
+  } else {
+    executable = findExecutable(kExecutableName);
+  }
+  if (executable.empty() || access(executable.c_str(), X_OK) != 0) {
+    std::cerr << "clang-tidy-cache: clang-tidy was not found; install it or set " << kExecutableEnvironment
+              << " to its path.\n";
     return std::nullopt;
   }
   return ClangTidy(std::move(executable));

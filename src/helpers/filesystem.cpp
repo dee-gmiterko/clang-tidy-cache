@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iterator>
 #include <string_view>
+#include <vector>
 
 #include "helpers/hash.h"
 
@@ -40,23 +41,61 @@ fs::path findUp(fs::path directory, const std::string& name) {
   }
 }
 
-fs::path findExecutable(const std::string& name) {
+namespace {
+
+std::vector<fs::path> searchDirectories() {
   const char* envPath = std::getenv("PATH");
   std::string searchPath = envPath != nullptr ? envPath : "";
+  std::vector<fs::path> directories;
   size_t begin = 0;
   while (begin <= searchPath.size()) {
     size_t end = searchPath.find(':', begin);
     if (end == std::string::npos) {
       end = searchPath.size();
     }
-    fs::path candidate = fs::path(searchPath.substr(begin, end - begin)) / name;
-    std::error_code errorCode;
-    if (fs::is_regular_file(candidate, errorCode) && access(candidate.c_str(), X_OK) == 0) {
-      return candidate;
-    }
+    directories.emplace_back(searchPath.substr(begin, end - begin));
     begin = end + 1;
   }
-  return {};
+  return directories;
+}
+
+bool isExecutableFile(const fs::path& path) {
+  std::error_code errorCode;
+  return fs::is_regular_file(path, errorCode) && access(path.c_str(), X_OK) == 0;
+}
+
+fs::path findVersionedExecutable(const std::string& name) {
+  const std::string prefix = name + "-";
+  fs::path best;
+  unsigned long bestVersion = 0;
+  for (const fs::path& directory : searchDirectories()) {
+    std::error_code errorCode;
+    for (fs::directory_iterator it(directory, errorCode), last; !errorCode && it != last; it.increment(errorCode)) {
+      std::string filename = it->path().filename().string();
+      std::string suffix = filename.starts_with(prefix) ? filename.substr(prefix.size()) : "";
+      if (suffix.empty() || suffix.find_first_not_of("0123456789") != std::string::npos || suffix.size() > 9) {
+        continue;
+      }
+      unsigned long version = std::stoul(suffix);
+      if (version > bestVersion && isExecutableFile(it->path())) {
+        best = it->path();
+        bestVersion = version;
+      }
+    }
+  }
+  return best;
+}
+
+}  // namespace
+
+fs::path findExecutable(const std::string& name) {
+  for (const fs::path& directory : searchDirectories()) {
+    fs::path candidate = directory / name;
+    if (isExecutableFile(candidate)) {
+      return candidate;
+    }
+  }
+  return findVersionedExecutable(name);
 }
 
 std::string readFile(const fs::path& path) {

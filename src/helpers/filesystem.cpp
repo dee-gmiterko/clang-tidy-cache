@@ -13,7 +13,7 @@
 std::string modificationTime(const fs::path& path) {
   std::error_code errorCode;
   auto time = fs::last_write_time(path, errorCode);
-  return errorCode ? "0" : std::to_string(time.time_since_epoch().count());
+  return errorCode ? "0" : std::to_string(static_cast<long long>(time.time_since_epoch().count()));
 }
 
 std::string fileSignature(const fs::path& path) {

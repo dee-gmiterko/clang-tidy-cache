@@ -59,7 +59,8 @@ const CompileDatabase* CacheKeyBuilder::databaseFor(const fs::path& sourceFile) 
   if (found == databases_.end()) {
     found = databases_.emplace(databaseFile, CompileDatabase::load(databaseFile)).first;
   }
-  return found->second ? &*found->second : nullptr;
+  const auto& database = found->second;
+  return database ? &*database : nullptr;
 }
 
 void CacheKeyBuilder::appendDependencies(Fingerprint& key, const std::optional<CompileCommand>& command) {

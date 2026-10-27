@@ -17,6 +17,7 @@ class CompileDatabase {
   static std::optional<CompileDatabase> load(const fs::path& jsonFile);
 
   [[nodiscard]] std::optional<CompileCommand> find(const fs::path& sourceFile) const;
+  [[nodiscard]] size_t fileCount() const;
 
  private:
   std::vector<std::pair<fs::path, CompileCommand>> entries_;

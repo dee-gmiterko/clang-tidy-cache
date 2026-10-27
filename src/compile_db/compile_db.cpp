@@ -1,6 +1,7 @@
 #include "compile_db/compile_db.h"
 
 #include <nlohmann/json.hpp>
+#include <set>
 
 #include "helpers/json_utils.h"
 #include "helpers/text/shell.h"
@@ -53,4 +54,12 @@ std::optional<CompileCommand> CompileDatabase::find(const fs::path& sourceFile) 
     }
   }
   return std::nullopt;
+}
+
+size_t CompileDatabase::fileCount() const {
+  std::set<fs::path> files;
+  for (const auto& entry : entries_) {
+    files.insert(entry.first);
+  }
+  return files.size();
 }

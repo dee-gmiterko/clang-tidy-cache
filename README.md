@@ -17,7 +17,7 @@ Use it in place of `clang-tidy`, with the same arguments:
 clang-tidy-cache -p build src/main.cpp
 ```
 
-Results are stored in cache `~/.cache/clang-tidy-cache`.
+Results are stored in cache `~/.cache/clang-tidy-cache`. Each project keeps at most about four entries per file of its compile database (oldest entries are dropped first), and projects whose cache has not been written for 30 days are deleted.
 
 ## Contributing
 

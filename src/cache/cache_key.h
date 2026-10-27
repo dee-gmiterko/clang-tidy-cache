@@ -19,6 +19,7 @@ class CacheKeyBuilder {
   CacheKeyBuilder(Fingerprint toolFingerprint, ProjectPaths paths);
 
   std::string keyFor(const fs::path& sourceFile, const std::vector<fs::path>& configFiles);
+  size_t projectFileCount(const fs::path& sourceFile);
 
  private:
   const std::string& contentHashOf(const fs::path& path);

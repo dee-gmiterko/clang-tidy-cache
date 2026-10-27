@@ -15,7 +15,9 @@ add_executable(clang-tidy-cache
   src/cached_run.cpp
   src/invocation.cpp
   src/cache/cache_key.cpp
-  src/cache/cache_store.cpp
+  src/cache/record_codec.cpp
+  src/cache/file/file_store.cpp
+  src/cache/file/stale_projects.cpp
   src/clang_tidy/clang_tidy.cpp
   src/compile_db/compile_db.cpp
   src/helpers/filesystem.cpp

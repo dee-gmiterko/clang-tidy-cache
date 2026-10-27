@@ -99,3 +99,8 @@ std::string CacheKeyBuilder::keyFor(const fs::path& sourceFile, const std::vecto
   appendDependencies(key, command);
   return key.digest();
 }
+
+size_t CacheKeyBuilder::projectFileCount(const fs::path& sourceFile) {
+  const CompileDatabase* database = databaseFor(sourceFile);
+  return database != nullptr ? database->fileCount() : 0;
+}

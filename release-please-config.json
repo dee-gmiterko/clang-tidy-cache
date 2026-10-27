@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "pull-request-header": "Release notes for the next version.",
+  "pull-request-footer": "Merge this pull request to tag the release.",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "clang-tidy-cache",
+      "include-component-in-tag": false
+    }
+  }
+}

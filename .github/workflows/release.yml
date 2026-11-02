@@ -38,9 +38,13 @@ jobs:
       - name: Build
         run: cmake --build build --parallel
 
+      - name: Install clang-tidy (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install llvm
+          echo "CLANG_TIDY=$(brew --prefix llvm)/bin/clang-tidy" >> "$GITHUB_ENV"
+
       - name: Run on own sources
-        env:
-          CLANG_TIDY: ${{ runner.os == 'macOS' && '/opt/homebrew/opt/llvm@18/bin/clang-tidy' || '' }}
         run: |
           ./build/clang-tidy-cache -p build $(find src -name '*.cpp')
 

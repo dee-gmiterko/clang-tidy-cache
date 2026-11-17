@@ -9,6 +9,7 @@
 namespace {
 
 constexpr size_t kReadChunkSize = 4096;
+constexpr unsigned kReadableEvents = static_cast<unsigned>(POLLIN) | static_cast<unsigned>(POLLHUP);
 
 int exitStatus(pid_t child) {
   int status = 0;
@@ -37,14 +38,16 @@ void forward(int fileDescriptor, const char* data, size_t size) {
 }
 
 void drain(int outFd, int errFd, RunResult& result, Echo echo) {
-  std::array<pollfd, 2> fds{pollfd{.fd = outFd, .events = POLLIN, .revents = 0},
-                            pollfd{.fd = errFd, .events = POLLIN, .revents = 0}};
+  std::array<pollfd, 2> fds{
+      pollfd{.fd = outFd, .events = POLLIN, .revents = 0},
+      pollfd{.fd = errFd, .events = POLLIN, .revents = 0},
+  };
   std::array<std::string*, 2> sinks{&result.out, &result.err};
   for (int openStreams = 2; openStreams > 0;) {
     poll(fds.data(), fds.size(), -1);
     for (size_t stream = 0; stream < fds.size(); ++stream) {
       pollfd& watched = fds[stream];
-      if (watched.fd < 0 || (watched.revents & (POLLIN | POLLHUP)) == 0) {
+      if (watched.fd < 0 || (static_cast<unsigned>(watched.revents) & kReadableEvents) == 0) {
         continue;
       }
       std::array<char, kReadChunkSize> buffer{};

@@ -14,8 +14,9 @@ namespace {
 
 constexpr const char* kExecutableName = "clang-tidy";
 constexpr const char* kExecutableEnvironment = "CLANG_TIDY";
-constexpr std::array<const char*, 5> kIncludeEnvironment{"CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH",
-                                                         "OBJC_INCLUDE_PATH", "SDKROOT"};
+constexpr std::array<const char*, 5> kIncludeEnvironment{
+    "CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "OBJC_INCLUDE_PATH", "SDKROOT",
+};
 constexpr std::array<const char*, 2> kConfigNames{".clang-tidy", "_clang-tidy"};
 
 }  // namespace

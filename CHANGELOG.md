@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/dee-gmiterko/clang-tidy-cache/compare/v1.1.0...v1.2.0) (2026-11-17)
+
+
+### Features
+
+* Cache key from included files of translation unit ([57987cc](https://github.com/dee-gmiterko/clang-tidy-cache/commit/57987cc21c6aee39cbe152ff64dfe09205cc4162))
+
 ## [1.1.0](https://github.com/dee-gmiterko/clang-tidy-cache/compare/v1.0.0...v1.1.0) (2026-10-27)
 
 

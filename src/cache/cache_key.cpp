@@ -1,10 +1,6 @@
 #include "cache/cache_key.h"
 
-#include <algorithm>
-#include <array>
-#include <string_view>
-
-#include "helpers/hash.h"
+#include "compile_db/dependencies.h"
 
 namespace {
 
@@ -15,25 +11,6 @@ fs::path resolveCompiler(const CompileCommand& command) {
   }
   fs::path path = name;
   return path.is_absolute() ? path : (command.directory / path).lexically_normal();
-}
-
-uint64_t headerFingerprint(const ProjectPaths& paths) {
-  constexpr std::array<std::string_view, 6> headerExtensions{".h", ".hh", ".hpp", ".hxx", ".inc", ".inl"};
-  uint64_t fingerprint = 0;
-  std::error_code errorCode;
-  fs::recursive_directory_iterator entryIterator(paths.root, fs::directory_options::skip_permission_denied, errorCode);
-  const fs::recursive_directory_iterator end;
-  for (; entryIterator != end; entryIterator.increment(errorCode)) {
-    const fs::path& path = entryIterator->path();
-    if (entryIterator->is_directory(errorCode)) {
-      if (path.filename().string().starts_with('.') || path == paths.buildDir) {
-        entryIterator.disable_recursion_pending();
-      }
-    } else if (std::ranges::find(headerExtensions, path.extension().string()) != headerExtensions.end()) {
-      fingerprint += fnv1a(path.string() + modificationTime(path));
-    }
-  }
-  return fingerprint;
 }
 
 }  // namespace
@@ -63,21 +40,28 @@ const CompileDatabase* CacheKeyBuilder::databaseFor(const fs::path& sourceFile) 
   return database ? &*database : nullptr;
 }
 
-void CacheKeyBuilder::appendDependencies(Fingerprint& key, const std::optional<CompileCommand>& command) {
-  if (command) {
-    fs::path compiler = resolveCompiler(*command);
-    if (!compiler.empty()) {
-      key.append(compiler.string());
-      key.append(fileSignature(compiler));
-    }
+bool CacheKeyBuilder::appendDependencies(Fingerprint& key, const std::optional<CompileCommand>& command) {
+  if (!command) {
+    return false;
   }
-  if (!headerFingerprint_) {
-    headerFingerprint_ = std::to_string(headerFingerprint(paths_));
+  fs::path compiler = resolveCompiler(*command);
+  if (compiler.empty()) {
+    return false;
   }
-  key.append(*headerFingerprint_);
+  std::optional<std::vector<fs::path>> dependencies = includedFiles(compiler, *command);
+  if (!dependencies) {
+    return false;
+  }
+  key.append(compiler.string());
+  key.append(fileSignature(compiler));
+  for (const fs::path& dependency : *dependencies) {
+    key.append(dependency.string());
+    key.append(contentHashOf(dependency));
+  }
+  return true;
 }
 
-std::string CacheKeyBuilder::keyFor(const fs::path& sourceFile, const std::vector<fs::path>& configFiles) {
+std::optional<std::string> CacheKeyBuilder::keyFor(const fs::path& sourceFile, const std::vector<fs::path>& configFiles) {
   Fingerprint key = toolFingerprint_;
   key.append(sourceFile.string());
   key.append(contentHashOf(sourceFile));
@@ -96,7 +80,9 @@ std::string CacheKeyBuilder::keyFor(const fs::path& sourceFile, const std::vecto
       key.append(argument);
     }
   }
-  appendDependencies(key, command);
+  if (!appendDependencies(key, command)) {
+    return std::nullopt;
+  }
   return key.digest();
 }
 

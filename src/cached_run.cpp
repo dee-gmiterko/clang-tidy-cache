@@ -19,17 +19,20 @@ int runCached(const ClangTidy& tool, const Invocation& invocation) {
 
   int worstExitCode = 0;
   for (size_t i = 0; i < invocation.files.size(); ++i) {
-    std::string key = keyBuilder.keyFor(invocation.files[i], ClangTidy::configFilesFor(invocation.files[i]));
-    liveKeys.insert(key);
+    std::optional<std::string> key = keyBuilder.keyFor(invocation.files[i], ClangTidy::configFilesFor(invocation.files[i]));
     ClangTidy::reportProgress(invocation, i);
     RunResult result;
-    if (std::optional<RunResult> hit = store->lookup(key)) {
+    if (!key) {
+      result = tool.run(invocation, i);
+    } else if (std::optional<RunResult> hit = store->lookup(*key)) {
+      liveKeys.insert(*key);
       result = std::move(*hit);
       std::cout << result.out << std::flush;
       std::cerr << result.err << std::flush;
     } else {
+      liveKeys.insert(*key);
       result = tool.run(invocation, i);
-      store->store(key, result);
+      store->store(*key, result);
     }
     worstExitCode = std::max(worstExitCode, result.exitCode);
   }

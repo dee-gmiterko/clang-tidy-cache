@@ -20,6 +20,7 @@ add_executable(clang-tidy-cache
   src/cache/file/stale_projects.cpp
   src/clang_tidy/clang_tidy.cpp
   src/compile_db/compile_db.cpp
+  src/compile_db/dependencies.cpp
   src/helpers/filesystem.cpp
   src/helpers/fingerprint.cpp
   src/helpers/hash.cpp

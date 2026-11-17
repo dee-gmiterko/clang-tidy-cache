@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/dee-gmiterko/clang-tidy-cache/compare/v1.2.0...v1.2.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* Format ([4a9bd64](https://github.com/dee-gmiterko/clang-tidy-cache/commit/4a9bd64d2f7a104835d7a2dab5ad0958e3fe3222))
+
 ## [1.2.0](https://github.com/dee-gmiterko/clang-tidy-cache/compare/v1.1.0...v1.2.0) (2026-11-17)
 
 
